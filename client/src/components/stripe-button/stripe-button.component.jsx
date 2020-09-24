@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import StripeCheckout from "react-stripe-checkout";
 import axios from "axios";
-import Logo from "./images/star.svg";
+
+import { persistor, store } from "../../redux/store";
+
 const StripeCheckoutButton = ({ price }) => {
-  let [responseData, setResponseData] = React.useState("");
   const priceForStripe = price * 100;
   const publishableKey =
     "pk_test_51HPp21Ei9eadDgdeQQALFAL0uIku87FMAqdgiSMrxrqVKjSHTZhcSnLgMAA348RbP2oLk5LZC4UNw07B5Df2llAJ00N0tIBFag";
@@ -12,37 +13,30 @@ const StripeCheckoutButton = ({ price }) => {
     axios({
       url: "payment",
       method: "post",
+
       data: {
         amount: priceForStripe,
         token: token,
       },
     })
       .then(async (response) => {
-        alert("succesful payment");
-        setResponseData(response.data);
-        console.log("response", response.data);
-        const book = {
-          Amount: response.data.success.amount,
-          Name: response.data.success.source.name,
-          City: response.data.success.source.address_city,
-          Country: response.data.success.source.address_country,
-          Address: response.data.success.source.address_line1,
-          Postnumber: response.data.success.source.address_zip,
-          Brand: response.data.success.source.brand,
-          Source_Country: response.data.success.source.country,
+        const myItems = store.getState().cart.cartItems;
+        var cartdata = {
+          elements: myItems,
         };
+        persistor.purge();
+        window.location.href = "/success";
         await axios
-          .post("http://localhost:5001/create", book)
-          .then(() => console.log(book))
+          .post("http://localhost:5000/create", cartdata)
+          .then(() => console.log(""))
           .catch((err) => {
-            console.error(err);
+            console.error("");
           });
       })
       .catch((error) => {
         console.log("Payment Error: ", error);
-        alert(
-          "There was an issue with your payment! Please make sure you use the provided credit card."
-        );
+
+        window.location.href = "/fail";
       });
   };
   return (
@@ -52,7 +46,6 @@ const StripeCheckoutButton = ({ price }) => {
         name="Gothenburg Clothing"
         billingAddress
         shippingAddress
-        image={Logo}
         description={`Your total is $${price}`}
         amount={priceForStripe}
         panelLabel="Pay by Stripe"

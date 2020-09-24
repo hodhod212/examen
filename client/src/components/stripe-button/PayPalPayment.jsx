@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import PayPal from "./PayPal";
-
 function PayPalPayment() {
   const [checkout, setCheckout] = useState(false);
+
   return (
     <div>
       {checkout ? (
@@ -19,4 +19,5 @@ function PayPalPayment() {
     </div>
   );
 }
+
 export default PayPalPayment;

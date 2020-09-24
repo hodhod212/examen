@@ -1,6 +1,8 @@
 import React, { useRef, useEffect } from "react";
 import { connect } from "react-redux";
+import axios from "axios";
 import { createStructuredSelector } from "reselect";
+import { persistor, store } from "../../redux/store";
 import {
   selectCartItems,
   selectCartTotal,
@@ -26,6 +28,24 @@ function Paypal({ total }) {
         },
         onApprove: async (data, actions) => {
           const order = await actions.order.capture();
+          if (order) {
+            const orderId = order.id;
+            const paypalItem = store.getState().cart.cartItems;
+            var paypalData = {
+              pays: paypalItem,
+              ID: orderId,
+            };
+            persistor.purge();
+            window.location.href = "/success";
+            await axios
+              .post("http://localhost:5000/creates", paypalData)
+              .then(() => console.log(""))
+              .catch((err) => {
+                console.error("");
+              });
+          } else {
+            window.location.href = "/fail";
+          }
           console.log(order);
         },
         onError: (err) => {
@@ -33,7 +53,7 @@ function Paypal({ total }) {
         },
       })
       .render(paypal.current);
-  }, []);
+  }, [total]);
 
   return (
     <div>
@@ -41,6 +61,7 @@ function Paypal({ total }) {
     </div>
   );
 }
+
 const mapStateToProps = createStructuredSelector({
   cartItems: selectCartItems,
   total: selectCartTotal,
